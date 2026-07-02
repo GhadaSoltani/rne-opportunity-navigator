@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import streamlit\")",
+      "Bash(python -c \"import fastapi\")",
+      "Bash(python -c \"import pandas\")"
+    ]
+  }
+}

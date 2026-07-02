@@ -1,0 +1,47 @@
+@"
+# Python
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Environment / secrets — never commit these
+.env
+
+# Streamlit cache
+.streamlit/
+
+# Data files — never commit real company data
+data/input/pdfs/
+data/input/*.csv
+data/input/*.xlsx
+data/input/*.pdf
+data/output/
+incoming/processed/*.pdf
+pdfs_to_ingest/
+samples/*.pdf
+
+# Knowledge — commit taxonomy and examples, not generated vectors
+knowledge/rag_knowledge_base.csv
+
+# ML artifacts
+*.pkl
+*.npy
+*.faiss
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+logs/
+"@ | Out-File -Encoding utf8 .gitignore

@@ -1,0 +1,1069 @@
+# ============================================================
+# Improved sector taxonomy for B2B company segmentation
+# Project: Ooredoo Business prospect classification
+# Data used for improvement: rne_companies.csv sample (958 rows)
+# Purpose:
+# Classify companies into 8 sectors from the activity column.
+# ============================================================
+
+version: "1.2"
+
+categories:
+  - retail
+  - manufacturing
+  - transport
+  - tourism
+  - healthcare
+  - education
+  - financial_services
+  - others
+
+# Priority order is important.
+# Strong/specific sectors are checked before broad sectors like retail and others.
+priority_order:
+  - healthcare
+  - education
+  - financial_services
+  - transport
+  - manufacturing
+  - tourism
+  - retail
+  - others
+
+sectors:
+
+  healthcare:
+    definition: >
+      Businesses related to medical care, health services, pharmacies,
+      clinics, laboratories, medical equipment, veterinary services,
+      optical activities, and healthcare products.
+
+    include_keywords:
+      - santé
+      - Pratique médicale
+      - sante
+      - medical
+      - médical
+      - médecine
+      - medecine
+      - médecin
+      - medecin
+      - clinique
+      - hôpital
+      - hopital
+      - pharmacie
+      - pharmaceutique
+      - pharmaceutiques
+      - parapharmacie
+      - laboratoire médical
+      - laboratoire medical
+      - laboratoire d'analyses
+      - analyses médicales
+      - analyses medicales
+      - biologique
+      - biologie
+      - dentaire
+      - dentiste
+      - radiologie
+      - optique
+      - opticien
+      - Activités hospitalières
+      - orthopédique
+      - orthopedique
+      - orthopédiques
+      - orthopediques
+      - ambulance
+      - kinésithérapie
+      - kinesitherapie
+      - vétérinaire
+      - veterinaire
+      - matériel médical
+      - materiel medical
+      - dispositifs médicaux
+      - dispositifs medicaux
+      - produits pharmaceutiques
+      - matériel orthopédique
+      - materiel orthopedique
+
+      # Arabic keywords from rne_companies.csv
+      - صحة
+      - مركز مختص في النقاهة االستشفايية
+      - صحي
+      - طب العيون
+      - طبية
+      - طبي
+      - الطب
+      - طبيب
+      - صيدلية
+      - صيدلي
+      - صيدلية
+      - صيدلية
+      - صيدلية
+      - صيدلية
+      - صيدلية
+      - صيدلانية
+      - شبه صيدلية
+      - مواد شبه صيدلية
+      - مخبر
+      - مخابر
+      - تحاليل
+      - تحاليل طبية
+      - مصحة
+      - مستشفى
+      - عيادة
+      - أسنان
+      - اسنان
+      - طبيب اسنان
+      - طبيب أسنان
+      - بيطري
+      - بصريات
+      - نظارات
+      - معدات طبية
+      - مواد صحية
+    include_examples:
+      - pharmacie
+      - clinique médicale
+      - laboratoire d'analyses médicales
+      - commerce de produits pharmaceutiques
+      - cabinet dentaire
+      - vente de matériel médical
+      - produits orthopédiques
+
+    exclude_keywords:
+      - formation médicale
+      - formation medicale
+      - enseignement médical
+      - enseignement medical
+
+    rules:
+      - If the activity contains pharmacy, clinic, medical laboratory, medical equipment, or healthcare service terms, classify as healthcare.
+      - If the activity contains commerce and pharmaceutical or medical terms, classify as healthcare instead of retail.
+
+  education:
+    definition: >
+      Businesses related to teaching, education, schools, universities,
+      training centers, professional training, childcare education, and learning services.
+
+    include_keywords:
+    
+      - école
+      - ecole
+      - Enseignement primaire
+      - enseignement
+      - d'enseignement
+      - éducation
+      - education
+      - formation
+      - centre de formation
+      - formation professionnelle
+      - Formation professionnelle
+      - université
+      - universite
+      - institut
+      - lycée
+      - lycee
+      - collège
+      - college
+      - crèche
+      - creche
+      - crèches
+      - creches
+      - garderie
+      - garderies
+      - jardin d'enfants
+      - auto-école
+      - auto ecole
+      - cours
+      - Enseignement primaire
+      - Crèches et garderies d'enfants
+      - apprentissage
+      - enseignement primaire
+      - enseignement secondaire
+      - enseignement supérieur
+      - enseignement superieur
+      - Activités récréatives
+      - EDUCATION
+      - Autres activités sportives
+  
+
+      # Arabic keywords from rne_companies.csv
+      - التكوين المهني
+      - مدرسة إبتدائية
+      - التكوين
+      - حضانة مدرسية
+      - فضاء ترفيهي لالطفال و الشباب 
+      - هيكل تكوين مستمر
+      - مركز تدريب وتكوين رياضي
+      - التعليم العالي الخاص و التكوين المستمر
+      - التكوين المستمر و انواع تعليم مختلفة
+      - فضاء ترفيهي
+      - تعليم
+      - وسيط في ميدان التعليم العالي
+      - دروس خصوصية
+      - التعليم
+      - تكوين
+      - التكوين
+      - مدرسة
+      - مدارس
+      - ابتدائي
+      - إبتدائي
+      - اإلبتدائي
+      - ثانوي
+      - الثانوية
+      - جامعة
+      - جامعي
+      - معهد
+      - روضة
+      - رياض الأطفال
+      - رياض الاطفال
+      - محضنة
+      - حضانة
+      - دروس
+      - دروس خصوصية
+      - التكوين المستمر
+      - تكوين مهني
+      - مركز تكوين
+      - أنواع تعليم مختلفة
+      - انواع تعليم مختلفة
+      - فضاء ترفيهي لالطفال
+      - التكوين المستمر 
+  
+    include_examples:
+      - école privée
+      - centre de formation professionnelle
+      - enseignement primaire
+      - enseignement supérieur
+      - jardin d'enfants
+      - auto-école
+      - crèches et garderies d'enfants
+
+    exclude_keywords:
+      - commerce de fournitures scolaires
+      - vente de fournitures scolaires
+
+    rules:
+      - If the activity is related to teaching, training, school, university, or childcare education, classify as education.
+      - If the activity only sells school supplies, classify as retail, not education.
+
+  financial_services:
+    definition: >
+      Businesses related to banking, insurance, credit, accounting,
+      auditing, leasing, investment, payment services, taxes, and financial advice.
+
+    include_keywords:
+      - banque
+      - bancaire
+      - assurance
+      - assurances
+      - crédit
+      - credit
+      - microfinance
+      - INTERMEDIATION FINANCIERE
+      - leasing
+      - intermediation financière
+      - intermediation financiere
+      - finance
+      - financier
+      - financière
+      - financiere
+      - financiers
+      - comptabilité
+      - comptabilite
+      - comptable
+      - fiscal
+      - fiscale
+      - audit
+      - courtage
+      - courtier
+      - investissement
+      - paiement
+      - recouvrement
+      - change
+      - gestion de fonds
+
+      # Arabic keywords from rne_companies.csv
+      - بنك
+      - بنكي
+      - عون استخالص
+      - مصرف
+      - تأمين
+      - تامين
+      - التأمين
+      - التامين
+      - قرض
+      - قروض
+      - تمويل
+      - مالية
+      - مالي
+      - محاسبة
+      - محاسب
+      - مراجعة حسابات
+      - تدقيق
+      - جبائي
+      - جبائية
+      - استثمار
+      - استخلاص
+      - صرف
+      - وساطة مالية
+    include_examples:
+      - courtage en assurance
+      - services financiers
+      - activités comptables
+      - intermédiation financière
+      - microfinance
+      - leasing
+      - conseil financier
+      - conseil fiscal
+
+    exclude_keywords:
+      - commerce de fournitures de bureau
+      - vente de fournitures de bureau
+
+    rules:
+      - If the activity is related to banking, insurance, credit, accounting, audit, tax, or financial advice, classify as financial_services.
+
+  transport:
+    definition: >
+      Businesses related to transportation of goods or people, logistics,
+      delivery, warehousing, freight, fleet activities, and transport support services.
+
+    include_keywords:
+      - Organisation du transport 
+      - SERVICES AUXILIAIRES DES TRANSPORTS 
+      - Transports routiers de marchandises
+      - transport
+      - TRANSPORTS TERRESTRES
+      - Transports routiers de marchandises
+      - transports
+      - transport routier
+      - transports routiers
+      - logistique
+      - livraison
+      - livreur
+      - fret
+      - marchandises
+      - voyageurs
+      - entreposage
+      - stockage
+      - dépôt
+      - depot
+      - manutention
+      - déménagement
+      - demenagement
+      - taxi
+      - location de véhicules
+      - location de vehicules
+      - maritime
+      - aérien
+      - aerien
+      - portuaire
+      - transit
+      - douane
+      - services auxiliaires des transports
+      - auxiliaires des transports
+      - distribution logistique
+      - entreposage frigorifique
+
+      # Arabic keywords from rne_companies.csv
+      - نقل
+      - النقل
+      - نقل البضائع
+      - نقل المسافرين
+      - بضائع
+      - مسافرين
+      - كراء السيارات
+      - عبر الطريق
+      - شحن
+      - لوجستيك
+      - لوجستية
+      - توصيل
+      - تسليم
+      - تخزين
+      - خزن
+      - مستودع
+      - مخزن
+      - مناولة
+      - كراء السيارات
+      - سيارات اجرة
+      - تاكسي
+      - بحري
+      - جوي
+      - عبور
+      - ديوانة
+    include_examples:
+      - transport routier de marchandises
+      - transport de voyageurs
+      - livraison de colis
+      - entreposage et stockage
+      - services auxiliaires des transports
+      - activité de taxi
+      - entreposage frigorifique
+
+    exclude_keywords:
+      - commerce de pièces automobiles
+      - commerce de pieces automobiles
+      - vente de véhicules
+      - vente de vehicules
+      - équipements automobiles
+      - equipements automobiles
+
+    rules:
+      - If the activity is mainly about moving goods or people, classify as transport.
+      - If the activity sells vehicles or vehicle parts, classify as retail instead of transport.
+
+  manufacturing:
+    definition: >
+      Businesses related to industrial production, manufacturing,
+      transformation of raw materials, factories, workshops, and production of physical goods.
+
+    include_keywords:
+      - Autres industries diverses
+      - fabrication
+      - INDUSTRIE TEXTILE
+      - Fabrication de meubles
+      - fabrique
+      - industrie
+      - industries
+      - industrielle
+      - industriel
+      - Autres industries diverses 
+      - manufacturière
+      - manufacturiere
+      - manufacturieres
+      - transformation
+      - usine
+      - atelier
+      - textile
+      - textiles
+      - vêtements
+      - vetements
+      - habillement
+      - agroalimentaire
+      - alimentaire
+      - boissons
+      - plastique
+      - plastiques
+      - métallique
+      - metallique
+      - métallurgie
+      - metallurgie
+      - chimique
+      - fabrication de fils et cables isoles
+      - chimiques
+      - meubles
+      - cuir
+      - autres industries textiles
+      - Autres industries diverses
+      - imprimerie
+      - matériaux de construction
+      - materiaux de construction
+      - machines
+      - assemblage
+      - huiles d'olives
+      - huiles d olives
+      - fabrication d'huiles
+      - fabrication d huiles
+      - travail de la pierre
+      - articles textiles
+      - Fabrication d'autres vêtements de dessus 
+      - Epuration des eaux usées
+      - INDUSTRIE MANUFACTURIERE
+      - industriel
+      - Fabrication de machines d'usage général 
+      - fabrication de parfums et de produits 
+
+      # Arabic keywords from rne_companies.csv
+      - صناعة  
+      - صناعة الحقائب و االحذية
+      - خياطة وبيع المالبس الجاهزة
+      - صناعة المالبس الجاهزة
+      - صنع الزيوت االساسية 
+      - صنع الصابون و العطور و مواد التط هير
+      - تصفية المياه المستعملة
+      - صنع اآلالت ذات اإلستعمال العام
+      - صناعة مواد كيميئية لتهيئة المنسوجات
+      - صنع مواد تجميل طبيعية
+      - صنع األثاث
+      - صيانة صناعية
+      - صناعة الميزان االلكتروني
+      - صنع
+      - صناعة الفحم المخصص للشيشة والشواء
+      - تصنيع
+      - إنتاج
+      - انتاج
+      - مصنع
+      - معمل
+      - تحويل
+      - المالبس
+      - الملابس
+      - نسيج
+      - غذائية
+      - مواد غذائية
+      - مشروبات
+      - بلاستيك
+      - لدائن
+      - معدنية
+      - معدن
+      - هياكل معدنية
+      - ميكانيكية
+      - قطع ميكانيكية
+      - ابواب ونوافذ
+      - أبواب ونوافذ
+      - خشب
+      - أثاث
+      - اثاث
+      - جلد
+      - طباعة
+      - زيوت
+      - زيوت الزيتون
+      - مكملات غذائية
+      - النجارة العامة
+      - صنع وخياطة التريكوات 
+      - صناعة مفروشات
+    include_examples:
+      - fabrication de vêtements
+      - industrie agroalimentaire
+      - fabrication de produits métalliques
+      - fabrication de meubles
+      - fabrication de produits chimiques
+      - imprimerie
+      - métallurgie
+      - fabrication d'huiles d'olives
+      - travail de la pierre
+      - autres activités manufacturières
+
+    exclude_keywords:
+      - commerce
+      - vente
+      - distribution
+      - magasin
+      - boutique
+
+    rules:
+      - If the activity is about producing or transforming goods, classify as manufacturing.
+      - If the activity only sells manufactured goods, classify as retail.
+
+  tourism:
+    definition: >
+      Businesses related to tourism, travel, accommodation, hotels,
+      tourist residences, travel agencies, visitor services, leisure,
+      recreational, cultural, cinema/video, and sport activities.
+      In this project, cafés and restaurants are classified under retail,
+      not tourism, unless the activity is clearly related to travel or accommodation.
+
+    include_keywords:
+      - Moyens d'hébergement
+      - tourisme
+      - Autres services personnels 
+      - touristique
+      - hôtel
+      - hotel
+      - hébergement
+      - hebergement
+      - résidence touristique
+      - residence touristique
+      - agence de voyage
+      - agences de voyages
+      - voyage
+      - voyages
+      - tour opérateur
+      - tour operateur
+      - camping
+      - maison d'hôtes
+      - maison d hotes
+      - auberge
+      - loisirs
+      - loisirs touristiques
+      - guide touristique
+      - activités récréatives
+      - activites recreatives
+      - récréatives
+      - recreatives
+      - sport
+      - sportives
+      - activités sportives
+      - activites sportives
+      - activités liées au sport
+      - activites liees au sport
+      - Agences de voyages 
+      - cinématographiques
+      - cinematographiques
+      - vidéo
+      - video
+      - culture
+      - services annexes à la culture
+      - services annexes a la culture
+
+      # Arabic keywords from rne_companies.csv
+      - وكالة اسفار صنف أ
+      - وكالة أسفار صنف ب
+      - وكاالت األسفار
+      - دار ضيافة
+      - سياحة
+      - سياحي
+      - سياحية
+      - فندق
+      - فنادق
+      - نزل
+      - انشطة التدليك واالسترخاء 
+      - إقامة سياحية
+      - اقامة سياحية
+      - إيواء
+      - ايواء
+      - وكالة أسفار
+      - وكالة اسفار
+      - وكالات أسفار
+      - وكالات اسفار
+      - أسفار
+      - اسفار
+      - سفر
+      - رحلات
+      - مخيم
+      - ترفيهي
+      - ترفيهية
+      - فضاء ترفيهي
+      - أنشطة ترفيهية
+      - انشطة ترفيهية
+      - رياضة
+      - قاعة رياضة
+      - سينما
+      - سمعي بصري
+      - السمعي البصري
+    include_examples:
+      - hôtel
+      - agence de voyage
+      - agences de voyages
+      - hébergement touristique
+      - maison d'hôtes
+      - résidence touristique
+      - camping
+      - activités récréatives
+      - autres activités sportives
+      - activités cinématographiques et vidéo
+      - Agences de voyages 
+
+    exclude_keywords:
+      - café
+      - cafe
+      - cafés
+      - cafes
+      - restaurant
+      - restaurants
+      - restauration
+      - salon de beauté
+      - salon de beaute
+      - coiffure
+
+    rules:
+      - If the activity is related to hotels, travel agencies, accommodation, tourism, leisure, recreation, cinema/video, or sport services, classify as tourism.
+      - Cafés and restaurants should be classified as retail in this project unless they are part of a hotel or tourism accommodation activity.
+
+  retail:
+    definition: >
+      Businesses that sell goods or services directly to customers or to other businesses.
+      This includes shops, supermarkets, wholesalers, boutiques, hardware stores,
+      distributors, cafés, restaurants, fast food, bakeries, pastry shops,
+      beauty salons, hairdressers, personal-care businesses, and commercial intermediaries.
+      In this project, cafés, restaurants, and beauty salons are considered retail
+      because the business goal is commercial B2B targeting.
+
+    include_keywords:
+      - Cafés 
+      - Commerce en détail spécialisé divers VTE PDTS 
+      - alimentaires dans les magasins spécialisés
+      - commerce
+      - Autres commerces de gros
+      - Commerce en détail spécialisé divers VENTE PIECEDE RECHARGE AUTRES EQUIPEMENT ET MATERIRLS EN DETAIL
+      - Commerce de détail d'habillement
+      - commerces
+      - commerce de détail
+      - commerce de detail
+      - commerce en détail
+      - commerce en detail
+      - commerce de gros
+      - commerces de gros
+      - équipements industriels divers
+      - Coiffure et soins de beauté SOINS ESTHETIQUES
+      - vente
+      - vendeur
+      - magasin
+      - magasins
+      - boutique
+      - boutiques
+      - supermarché
+      - supermarche
+      - hypermarché
+      - hypermarche
+      - épicerie
+      - epicerie
+      - grossiste
+      - distribution
+      - distributeur
+      - intermédiaires du commerce
+      - intermediaires du commerce
+      - import
+      - export
+      - quincaillerie
+      - peintures et verres
+      - matériaux
+      - materiaux
+      - pièces automobiles
+      - pieces automobiles
+      - équipements automobiles
+      - equipements automobiles
+      - habillement
+      - vêtements
+      - vetements
+      - chaussures
+      - meubles
+      - équipements du foyer
+      - equipements du foyer
+      - électroménagers
+      - electromenagers
+      - électronique
+      - electronique
+      - radiotélévision
+      - radiotelevision
+      - parfumerie
+      - librairie
+      - produits alimentaires
+      - alimentaires dans les magasins spécialisés
+      - alimentaires dans les magasins specialises
+      - produits de beauté
+      - produits de beaute
+      - cosmétique
+      - cosmetique
+      - cosmetiques
+      - boulangerie
+      - pâtisserie
+      - patisserie
+      - café
+      - cafe
+      - cafés
+      - cafes
+      - restaurant
+      - restaurants
+      - restauration
+      - restauration simplifiée
+      - restauration simplifiee
+      - traiteur
+      - traiteurs
+      - salon de beauté
+      - salon de beaute
+      - soins de beauté
+      - soins de beaute
+      - coiffure
+      - esthétique
+      - esthetique
+      - spa
+      - Restauration simplifiée
+      - services personnels
+      - bains
+      - soins corporels
+      - alimentaires dans les magasins spécialisés
+      - Autres commerces de gros
+      - AUTOMOBILE
+      - épices
+      - Imprimerie
+      - Traiteurs 
+      - Restaurants 
+      - Restauration moderne
+     
+
+      # Arabic keywords from rne_companies.csv
+      - مطاعم عصرية 
+      - تجارة اللوح مواد البناء ومواد االلكترونيك
+      - قاعة شاي  
+      - طباخ
+      - صنع وبيع جميع انواع المرطبات و الحلويات
+      - مقهى من الصنف األول
+      - بيع المعدات واللوازم اإلدارية
+      - بيع بالتفصيل للمواد الغذائية وما شابهها
+      - طباعة على كل المحامل
+      - بيع البذور و المشاتل
+      - تجارة دولية
+      - قاعة شاي ومطعم متخصص في االكلة السريعة
+      - كراء فساتين االفراح
+      - مطاعم متخصصة في االكلة الخفيفة
+      - التوابل
+      - أشغال صيانة السيارات و إصالحها
+      - تجارة دولية
+      - تجارة
+      - تجاري
+      - تجارية
+      - بيع
+      - البيع
+      - بالتفصيل
+      - بالجملة
+      - تجارة بالتفصيل
+      - تجارة بالجملة
+      - موزع
+      - توزيع
+      - مغازة
+      - متجر
+      - دكان
+      - سوق
+      - سوبرماركت
+      - مواد مختلفة
+      - مواد غذائية
+      - مواد البناء
+      - مواد حديدية
+      - قطع غيار
+      - تجهيزات
+      - اكسسوارات
+      - إكسسوارات
+      - هواتف
+      - ملابس
+      - المالبس
+      - أحذية
+      - احذية
+      - عطور
+      - مواد التجميل
+      - تجميل
+      - حلاقة
+      - حالقة
+      - صالون تجميل
+      - صالون حلاقة
+      - قهوة
+      - مقهى
+      - مطعم
+      - مطاعم
+      - مشرب
+      - مرطبات
+      - مخبزة
+      - مخابز
+      - مطعم
+      - مطعم سريع
+      - مطاعم سريعة
+      - خدمات شخصية
+      - خدمات اشخاص
+      - الراديو و التلفزة بالتفصيل
+      - تحضير االطباق الجاهزة
+    include_examples:
+      - commerce de détail de quincaillerie peintures et verres
+      - intermédiaires du commerce en produits divers
+      - commerce de gros
+      - supermarché
+      - boutique de vêtements
+      - commerce de détail d'habillement
+      - commerce d'équipements automobiles
+      - café
+      - cafés
+      - restaurant
+      - restaurants
+      - restauration simplifiée
+      - salon de coiffure
+      - salon de beauté
+      - coiffure et soins de beauté
+      - boulangerie
+      - pâtisserie
+      - services personnels
+
+    exclude_keywords:
+      - pharmacie
+      - pharmaceutique
+      - pharmaceutiques
+      - médical
+      - medical
+      - banque
+      - assurance
+      - transport
+      - transports
+      - fabrication
+      - industrie
+      - industries
+      - enseignement
+      - formation
+      - agence de voyage
+      - agences de voyages
+      - hôtel
+      - hotel
+      - hébergement
+      - hebergement
+
+    rules:
+      - If the activity contains commerce, vente, magasin, boutique, supermarket, wholesale, distribution, café, restaurant, fast food, bakery, pastry, personal-care, or beauty salon terms, classify as retail.
+      - If the activity contains healthcare, finance, education, transport, manufacturing, or tourism priority keywords, classify using the higher-priority sector instead of retail.
+
+  others:
+    definition: >
+      Activities that do not clearly belong to retail, manufacturing,
+      transport, tourism, healthcare, education, or financial services.
+      This includes consulting, legal, architecture, engineering, real estate,
+      construction, agriculture, government/public administration, IT/software,
+      telecommunications, events, cleaning, security, utilities, and general services.
+
+    include_keywords:
+      - conseil
+      - conseil pour les affaires
+      - affaires et la gestion
+      - gestion
+      - juridique
+      - juridiques
+      - avocat
+      - architecture
+      - ingénierie
+      - ingenierie
+      - études techniques
+      - etudes techniques
+      - immobilier
+      - immobilières
+      - immobilieres
+      - construction
+      - Crèches et garderies d'enfants
+      - bâtiment
+      - batiment
+      - travaux de construction
+      - travaux
+      - installation électrique
+      - installation electrique
+      - travaux installation électrique
+      - travaux installation electrique
+      - plomberie
+      - menuiserie
+      - peinture
+      - finition
+      - agriculture
+      - agricole
+      - culture d'oliviers
+      - culture
+      - élevage
+      - elevage
+      - pêche
+      - peche
+      - sécurité
+      - securite
+      - nettoyage
+      - maintenance
+      - réparation
+      - reparation
+      - publicité
+      - publicite
+      - informatique
+      - informatiques
+      - activités informatiques
+      - activites informatiques
+      - logiciel
+      - logiciels
+      - réalisation de logiciels
+      - realisation de logiciels
+      - systèmes informatiques
+      - systemes informatiques
+      - télécommunications
+      - telecommunications
+      - services administratifs
+      - association
+      - ong
+      - activités de services
+      - activites de services
+      - services aux entreprises
+      - aux entreprises
+      - entreprises
+      - services personnels n.c.a
+      - organisation de foires et salons
+      - foires et salons
+      - foire
+      - foires
+      - salons professionnels
+      - présidence du gouvernement
+      - presidence du gouvernement
+      - gouvernement
+      - production et distribution de chaleur
+      - epuration des eaux usées
+      - epuration des eaux usees
+      - eaux usées
+      - eaux usees
+      - activités photographiques
+      - activites photographiques
+      - placements aux entreprises
+      - activités de placements
+      - activites de placements
+
+      # Arabic keywords from rne_companies.csv
+      - استشارة
+      - استشارات
+      - استشارية
+      - اإلستشارية
+      - الخبرة اإلستشارية
+      - التصرف
+      - الأعمال
+      - الاعمال
+      - قانونية
+      - محاماة
+      - محامي
+      - هندسة
+      - هندسية
+      - معمارية
+      - عقارات
+      - عقارية
+      - بناء
+      - مقاولات
+      - أشغال
+      - اشغال
+      - تركيب
+      - كهرباء
+      - كهربائية
+      - صيانة
+      - إصلاح
+      - اصلاح
+      - فلاحة
+      - زراعة
+      - زيتون
+      - تربية
+      - صيد بحري
+      - أمن
+      - امن
+      - حراسة
+      - مراقبة
+      - تنظيف
+      - نظافة
+      - إشهار
+      - اشهار
+      - إعلان
+      - اعلان
+      - إعلامية
+      - اعلامية
+      - معلوماتية
+      - برمجيات
+      - برامج
+      - إنجاز البرامج المعلوماتية
+      - انجاز البرامج المعلوماتية
+      - اتصالات
+      - نداء
+      - مركز نداء
+      - خدمات إدارية
+      - خدمات ادارية
+      - جمعية
+      - تنظيم العروض
+      - تنظيم معارض
+      - تنظيم الصالونات
+      - جمع النفايات
+      - نفايات
+      - مناطق خضراء
+      - صيانة السيارات
+    include_examples:
+      - activités juridiques
+      - conseil pour les affaires et autres conseils de gestion
+      - activités d'architecture
+      - activités immobilières
+      - ingénierie études techniques
+      - travaux de construction
+      - travaux d'installation électrique
+      - plomberie
+      - menuiserie
+      - services de nettoyage
+      - sécurité privée
+      - développement informatique
+      - réalisation de logiciels
+      - télécommunications
+      - organisation de foires et salons
+      - présidence du gouvernement
+      - culture d'oliviers
+      - production et distribution de chaleur
+      - epuration des eaux usées
+
+    exclude_keywords: []
+
+    rules:
+      - Use others when the activity does not clearly match one of the seven main sectors.
+      - Use others for consulting, legal, architecture, engineering, real estate, construction, agriculture, government, IT/software, telecom, events, utilities, cleaning, security, and general services unless the business logic later creates a dedicated sector for them.

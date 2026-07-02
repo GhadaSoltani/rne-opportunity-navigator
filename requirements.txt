@@ -1,0 +1,25 @@
+# Extraction
+camelot-py[cv]
+pymupdf
+opencv-python
+PyPDF2
+
+# Segmentation
+pandas
+numpy
+pyyaml
+scikit-learn
+sentence-transformers
+requests
+tqdm
+joblib
+openpyxl
+
+# API
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Dashboard
+streamlit
+plotly
