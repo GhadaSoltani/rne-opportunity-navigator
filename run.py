@@ -5,13 +5,11 @@ Usage:
     python run.py --dashboard
     python run.py --api
     python run.py --pdf-folder data/input/pdfs
+    python run.py --from-db
     python run.py --skip-extraction
     python run.py --skip-extraction --rebuild-rag
-    python run.py --pdf-folder data/input/pdfs --llm-audit
-
-    NEW — extract from database instead of local folder:
-    python run.py --from-db
-    python run.py --from-db --rebuild-rag
+    python run.py --recommend
+    python run.py --from-db --recommend
 """
 
 import argparse
@@ -50,8 +48,6 @@ def _run_api(host: str, port: int, reload: bool):
 def _run_pipeline(args):
     from pipeline.runner import run_pipeline
 
-    # from_db mode: no pdf_folder needed
-    # local mode: pdf_folder needed unless skipping extraction
     if args.from_db:
         pdf_folder = None
     elif args.skip_extraction:
@@ -78,6 +74,16 @@ def _run_pipeline(args):
     return result
 
 
+def _run_recommendation(args):
+    from recommendation.main import run_recommendation
+
+    result = run_recommendation(top_n=args.rec_top_n)
+
+    logger.info("Recommendation complete: %d recommendations produced.",
+                result.get("recommendations_total", 0))
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Opportunity Navigator — unified entry point",
@@ -92,22 +98,35 @@ def main():
                                                                    help="Path to rne_companies.csv")
     parser.add_argument("--skip-extraction",  action="store_true", help="Skip PDF extraction, run segmentation only")
     parser.add_argument("--rebuild-rag",      action="store_true", help="Force rebuild of RAG knowledge base")
-    parser.add_argument("--llm-audit",        action="store_true", help="Run LLM audit after segmentation (requires Ollama)")
+    parser.add_argument("--llm-audit",        action="store_true", help="Run LLM audit after segmentation")
     parser.add_argument("--llm-limit",        type=int, default=None, help="Limit LLM audit to N rows")
-    parser.add_argument("--keep-mixed",       action="store_true", help="Keep intermediate extraction files (for debugging)")
-    parser.add_argument("--from-db",          action="store_true", help="Extract from database (MinIO/MongoDB) instead of local folder")
-    parser.add_argument("--host",             default="0.0.0.0",   help="API host (default: 0.0.0.0)")
-    parser.add_argument("--port",             type=int, default=8000, help="API port (default: 8000)")
+    parser.add_argument("--keep-mixed",       action="store_true", help="Keep intermediate extraction files")
+    parser.add_argument("--from-db",          action="store_true", help="Extract from database (MinIO/MongoDB)")
+    parser.add_argument("--recommend",        action="store_true", help="Run the recommendation system after pipeline")
+    parser.add_argument("--rec-top-n",        type=int, default=3, help="Top-N offers per company (default 3)")
+    parser.add_argument("--host",             default="0.0.0.0",   help="API host")
+    parser.add_argument("--port",             type=int, default=8000, help="API port")
     parser.add_argument("--reload",           action="store_true", help="Enable uvicorn auto-reload")
 
     args = parser.parse_args()
 
     if args.dashboard:
         _run_dashboard()
+
     elif args.api:
         _run_api(host=args.host, port=args.port, reload=args.reload)
+
+    elif args.recommend and not (args.skip_extraction or args.pdf_folder or args.from_db):
+        # Only recommendation, no pipeline — useful when features already exist
+        _run_recommendation(args)
+
     elif args.skip_extraction or args.pdf_folder or args.rebuild_rag or args.llm_audit or args.from_db:
+        # Run the pipeline first
         _run_pipeline(args)
+        # Then run recommendation if requested
+        if args.recommend:
+            _run_recommendation(args)
+
     else:
         parser.print_help()
 
