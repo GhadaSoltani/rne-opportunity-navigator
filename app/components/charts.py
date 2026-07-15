@@ -12,8 +12,16 @@ import streamlit as st
 
 from app.theme import (
     CATEGORY_COLORS, WHITE, OFF_WHITE, MUTED,
-    NAVY_HAIRLINE, NAVY_LIGHT, NAVY_LIGHTER, RED, RED_SOFT,
+    NAVY, NAVY_HAIRLINE, NAVY_LIGHT, NAVY_LIGHTER, RED, RED_SOFT,
 )
+
+# Sector display labels (used by strongest_by_sector_chart)
+_SECTOR_LABELS = {
+    "retail": "Retail", "manufacturing": "Manufacturing",
+    "transport": "Transport", "tourism": "Tourism",
+    "healthcare": "Healthcare", "education": "Education",
+    "financial_services": "Financial services", "others": "Others",
+}
 
 # Shared transparent layout so charts blend into the navy surface
 _BASE_LAYOUT = dict(
@@ -272,5 +280,101 @@ def family_donut_chart(recs_df: pd.DataFrame):
         **_BASE_LAYOUT, height=340,
         showlegend=True,
         legend=dict(font=dict(color=OFF_WHITE)),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+
+def strongest_by_sector_chart(
+    recs_df: pd.DataFrame,
+    threshold: float = 0.70,
+):
+    """
+    Horizontal bar chart of the strongest leads (rank-1 score ≥ threshold)
+    broken down by sector.
+
+    Bars are colored by sector using the shared CATEGORY_COLORS palette so
+    the chart reads consistently with the rest of the dashboard. Each bar
+    ends with the count, and a hover tooltip surfaces the concentration
+    rate (what % of that sector's companies are strong leads).
+
+    A horizontal bar is used rather than a pie for two reasons:
+        - 8 sectors + a dominant "others" bucket would visually squash the
+          smaller (and often more valuable) sectors in a pie
+        - horizontal bars naturally rank the sectors, which is what a sales
+          manager actually needs to see
+
+    Args:
+        recs_df:   the enriched recommendations frame (needs 'rank',
+                   'final_score', 'category').
+        threshold: minimum rank-1 score to count as a "strongest lead".
+    """
+    if recs_df.empty or "category" not in recs_df.columns:
+        st.info("No sector data to display.")
+        return
+
+    top1 = recs_df[recs_df["rank"] == 1].copy()
+    if top1.empty:
+        return
+
+    hot = top1[top1["final_score"] >= threshold]
+    if hot.empty:
+        st.markdown(
+            f"<div class='on-card' style='text-align:center; padding:1.2rem;'>"
+            f"<p style='color:{MUTED}; margin:0;'>"
+            f"No sectors reached the {threshold:.2f} threshold in the current view.</p></div>",
+            unsafe_allow_html=True,
+        )
+        return
+
+    # Count strong leads per sector, and compute concentration rate
+    hot_counts   = hot["category"].value_counts()
+    total_counts = top1["category"].value_counts()
+
+    rows = []
+    for cat in hot_counts.index:
+        strong = int(hot_counts[cat])
+        total  = int(total_counts.get(cat, 0))
+        rate   = (100 * strong / total) if total else 0.0
+        rows.append({
+            "category": cat,
+            "label":    _SECTOR_LABELS.get(cat, cat),
+            "color":    CATEGORY_COLORS.get(cat, "#7286A6"),
+            "strong":   strong,
+            "total":    total,
+            "rate":     rate,
+        })
+
+    agg = pd.DataFrame(rows).sort_values("strong")  # ascending → largest on top
+
+    fig = go.Figure(go.Bar(
+        x=agg["strong"],
+        y=agg["label"],
+        orientation="h",
+        marker=dict(color=agg["color"], line=dict(width=0)),
+        text=[f"{s:,}" for s in agg["strong"]],
+        textposition="outside",
+        textfont=dict(color=WHITE, size=12),
+        cliponaxis=False,
+        customdata=agg[["total", "rate"]].values,
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "%{x} strong leads<br>"
+            "%{customdata[1]:.1f}% of the sector (%{customdata[0]} companies)"
+            "<extra></extra>"
+        ),
+    ))
+
+    fig.update_layout(
+        **_BASE_LAYOUT,
+        height=max(280, 44 * len(agg) + 60),
+        showlegend=False,
+    )
+    fig.update_xaxes(
+        gridcolor=NAVY_HAIRLINE, zeroline=False,
+        tickfont=dict(color=MUTED), title="",
+    )
+    fig.update_yaxes(
+        gridcolor="rgba(0,0,0,0)", zeroline=False,
+        tickfont=dict(color=OFF_WHITE, size=12), title="",
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})

@@ -192,18 +192,33 @@ if source == "computed":
     )
 
 
-# ── Optional sector filter that drives the whole dashboard ────────────────────
+# ── Optional sector + governorate filters that drive the whole dashboard ──────
 all_sectors = sorted([c for c in df["category"].dropna().unique().tolist() if str(c).strip()]) if "category" in df.columns else []
-fcol1, fcol2 = st.columns([3, 1])
+all_governorates = sorted([
+    g for g in df["governorate"].dropna().unique().tolist()
+    if str(g).strip() and str(g).strip().lower() != "unknown"
+]) if "governorate" in df.columns else []
+
+fcol1, fcol2, fcol3 = st.columns([2, 1, 1])
 with fcol2:
     sector_filter = st.selectbox(
         "Focus sector",
         ["All sectors"] + [CATEGORY_LABELS.get(s, s) for s in all_sectors],
     )
+with fcol3:
+    gov_filter = st.selectbox(
+        "Focus governorate",
+        ["All governorates"] + all_governorates,
+    )
 label_to_key = {CATEGORY_LABELS.get(s, s): s for s in all_sectors}
 active_key = label_to_key.get(sector_filter) if sector_filter != "All sectors" else None
+active_gov = gov_filter if gov_filter != "All governorates" else None
 
-view = df if active_key is None else df[df["category"] == active_key]
+view = df.copy()
+if active_key is not None:
+    view = view[view["category"] == active_key]
+if active_gov is not None:
+    view = view[view["governorate"] == active_gov]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -330,6 +345,60 @@ if timing is not None and len(timing) > 0:
 else:
     st.info("Timing summary not found. Run `python -m analysis.main` to build it.")
 
+# ── New companies list — toggled by the user ────────────────────────────────
+show_new_list = st.toggle("View list of newest companies", value=False, key="toggle_new_list")
+
+if show_new_list and "is_new_company" in view.columns:
+    new_df = view[view["is_new_company"] == True].copy()
+    if len(new_df) == 0:
+        st.info("No companies registered in the last 12 months for this view.")
+    else:
+        # Build a clean display table
+        display_cols = []
+        col_rename = {}
+        for raw, nice in [
+            ("fr_denomination", "Company name"),
+            ("fr_activite_principale", "Activity"),
+            ("governorate", "Governorate"),
+            ("city", "City"),
+            ("capital", "Capital (TND)"),
+            ("date_immatriculation", "Registered"),
+            ("fr_forme_juridique", "Legal form"),
+            ("business_model", "Model"),
+            ("company_size", "Size"),
+        ]:
+            if raw in new_df.columns:
+                display_cols.append(raw)
+                col_rename[raw] = nice
+
+        if display_cols:
+            show_new = new_df[display_cols].rename(columns=col_rename).copy()
+            # Sort newest first
+            if "Registered" in show_new.columns:
+                show_new = show_new.sort_values("Registered", ascending=False)
+            # Format capital
+            if "Capital (TND)" in show_new.columns:
+                show_new["Capital (TND)"] = pd.to_numeric(
+                    show_new["Capital (TND)"], errors="coerce"
+                ).apply(lambda v: f"{v:,.0f}" if pd.notna(v) else "—")
+            # Replace NaN/unknown with dashes for readability
+            show_new = show_new.fillna("—").replace({"unknown": "—", "other": "—", "Unknown": "—"})
+
+            st.markdown(
+                f"<p style='color:{MUTED}; font-size:0.86rem; margin-bottom:0.3rem;'>"
+                f"Showing <b style=\"color:{WHITE};\">{len(show_new):,}</b> companies registered in the last 12 months "
+                f"— prime targets with no existing provider.</p>",
+                unsafe_allow_html=True,
+            )
+            st.dataframe(
+                show_new,
+                use_container_width=True,
+                height=min(480, 56 + 36 * len(show_new)),
+                hide_index=True,
+            )
+        else:
+            st.info("Not enough columns to display a company list.")
+
 section_divider()
 
 
@@ -345,19 +414,32 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-gov = load_csv(str(GOVERNORATE_CSV))
-if gov is not None and len(gov) > 0:
-    show = gov.copy()
-    show = show[show["governorate"].astype(str) != "Unknown"]   # hide Unknown row from the scorecard
-    if len(show):
-        show = show.rename(columns={
-            "governorate": "Governorate", "companies": "Companies",
-            "pct_new": "New %", "pct_digital_high": "Digital %",
-            "pct_b2b": "B2B %", "pct_high_connectivity": "High connectivity %",
-            "avg_capital": "Avg capital (TND)",
-        })
+# Compute a richer governorate scorecard directly from the filtered view
+if "governorate" in view.columns and total:
+    gov_live = view[view["governorate"].astype(str).str.lower() != "unknown"].copy()
+    if len(gov_live):
+        def gov_agg(g):
+            row = {"Companies": len(g)}
+            row["New %"] = round(100 * g["is_new_company"].mean(), 1) if "is_new_company" in g.columns else 0
+            row["B2B %"] = round(100 * (g["business_model"] == "B2B").mean(), 1) if "business_model" in g.columns else 0
+            row["Avg age (yrs)"] = round(g["age_years"].mean(), 1) if "age_years" in g.columns else "—"
+            row["Multi-site %"] = round(100 * g["multisite_signal"].mean(), 1) if "multisite_signal" in g.columns else 0
+            row["Avg capital (TND)"] = round(g["capital"].astype(float, errors="ignore").mean(), 0) if "capital" in g.columns else "—"
+            row["Callable %"] = round(100 * g["callable_prospect"].mean(), 1) if "callable_prospect" in g.columns else 0
+            return pd.Series(row)
+
+        show = gov_live.groupby("governorate").apply(gov_agg, include_groups=False).reset_index()
+        show = show.rename(columns={"governorate": "Governorate"})
+        show = show.sort_values("Companies", ascending=False)
+
+        # Format Avg capital nicely
+        if "Avg capital (TND)" in show.columns:
+            show["Avg capital (TND)"] = show["Avg capital (TND)"].apply(
+                lambda v: f"{v:,.0f}" if isinstance(v, (int, float)) and pd.notna(v) else "—"
+            )
+
         st.dataframe(
-            show, use_container_width=True, height=min(360, 56 + 36 * len(show)),
+            show, use_container_width=True, height=min(400, 56 + 36 * len(show)),
             hide_index=True,
         )
     else:
@@ -369,7 +451,7 @@ section_divider()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# TIER 2 — Sector composition + digital demand
+# TIER 2 — Sector composition + governorate breakdown
 # ──────────────────────────────────────────────────────────────────────────────
 
 eyebrow("Composition of the market")
@@ -395,16 +477,20 @@ with r2c1:
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 with r2c2:
-    st.markdown(f"<h4 style='color:{WHITE};'>Digital demand by sector</h4>", unsafe_allow_html=True)
-    if {"category", "digital_signal"}.issubset(view.columns) and total:
-        g = view.groupby("category")["digital_signal"].apply(lambda s: 100 * (s == "high").mean()).reset_index()
-        g.columns = ["category", "pct"]
-        g["label"] = g["category"].map(lambda c: CATEGORY_LABELS.get(c, c))
-        g = g.sort_values("pct")
-        fig = horizontal_bar(g["label"], g["pct"], "#5B8FE0", height=330,
-                              text_format=lambda v: f"{v:.0f}%")
-        fig.update_xaxes(ticksuffix="%")
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.markdown(f"<h4 style='color:{WHITE};'>Companies by governorate</h4>", unsafe_allow_html=True)
+    if "governorate" in view.columns and total:
+        gov_counts = view["governorate"].value_counts().reset_index()
+        gov_counts.columns = ["governorate", "count"]
+        gov_counts = gov_counts[~gov_counts["governorate"].astype(str).str.lower().isin({"unknown"})]
+        gov_counts = gov_counts.head(10).sort_values("count")  # top 10, ascending for horizontal bar
+        if len(gov_counts):
+            st.plotly_chart(
+                horizontal_bar(gov_counts["governorate"], gov_counts["count"], "#5B8FE0",
+                               height=max(280, 32 * len(gov_counts))),
+                use_container_width=True, config={"displayModeBar": False},
+            )
+        else:
+            st.info("No governorate data available for this view.")
 
 section_divider()
 
