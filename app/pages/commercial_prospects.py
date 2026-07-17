@@ -140,6 +140,31 @@ def load_features() -> pd.DataFrame | None:
     return pd.read_csv(FEATURES_CSV, encoding="utf-8-sig")
 
 
+def _generate_recommendations_only() -> str | None:
+    """Run recommendation Layers 1-4 only. Needs company_features.csv to already exist.
+    Returns an error message on failure, or None on success."""
+    from recommendation.main import run_recommendation
+    try:
+        run_recommendation()
+        return None
+    except Exception as e:
+        return str(e)
+
+
+def _generate_full_pipeline() -> str | None:
+    """Run the full --from-db pipeline (extraction + segmentation + analysis), then
+    recommendations. Needs DB credentials (MONGO_URI, MinIO) configured in the environment.
+    Returns an error message on failure, or None on success."""
+    from pipeline.runner import run_pipeline
+    from recommendation.main import run_recommendation
+    try:
+        run_pipeline(from_db=True)
+        run_recommendation()
+        return None
+    except Exception as e:
+        return str(e)
+
+
 def enrich_recommendations(recs: pd.DataFrame, feats: pd.DataFrame) -> pd.DataFrame:
     """Join recommendations with company features for display."""
     join_cols = [
@@ -429,18 +454,62 @@ page_title("Commercial Prospects", "AI-powered recommendations for every company
 recs_df  = load_recommendations()
 feats_df = load_features()
 
+st.session_state.setdefault("auto_generate_attempted", False)
+st.session_state.setdefault("auto_generate_error", None)
+
+if (recs_df is None or feats_df is None) and not st.session_state.auto_generate_attempted:
+    st.session_state.auto_generate_attempted = True
+
+    if feats_df is None:
+        with st.status(
+            "No data found yet — running the full pipeline "
+            "(extraction + segmentation + recommendations). This can take a while…",
+            expanded=True,
+        ) as status:
+            error = _generate_full_pipeline()
+            if error is None:
+                status.update(label="Pipeline complete.", state="complete")
+            else:
+                status.update(label=f"Pipeline failed: {error}", state="error")
+    else:
+        with st.status("Generating recommendations…", expanded=True) as status:
+            error = _generate_recommendations_only()
+            if error is None:
+                status.update(label="Recommendations generated.", state="complete")
+            else:
+                status.update(label=f"Recommendation generation failed: {error}", state="error")
+
+    st.session_state.auto_generate_error = error
+    if error is None:
+        load_recommendations.clear()
+        load_features.clear()
+        st.rerun()
+
+recs_df  = load_recommendations()
+feats_df = load_features()
+
 if recs_df is None or feats_df is None:
     st.markdown(
         f'<div class="on-card on-reveal" style="text-align:center;margin-top:1.4rem;">'
         f'<p style="color:{OFF_WHITE};font-size:1.05rem;margin:0 0 0.6rem 0;">'
         f'{"Recommendations have not been generated yet." if recs_df is None else "Company features file not found."}'
-        f'</p><p style="color:{MUTED};font-size:0.92rem;margin:0 0 0.2rem 0;">'
-        f'Run the pipeline with recommendations enabled:</p>'
+        f'</p>'
+        + (
+            f'<p style="color:{RED};font-size:0.88rem;margin:0.4rem 0;">'
+            f'Automatic generation failed: {_esc(st.session_state.auto_generate_error)}</p>'
+            if st.session_state.auto_generate_error else ""
+        )
+        + f'<p style="color:{MUTED};font-size:0.92rem;margin:0.4rem 0 0.2rem 0;">'
+        f'Or run the pipeline manually:</p>'
         f'<code style="color:{RED_SOFT};font-size:0.88rem;">python run.py --from-db --recommend</code>'
         f'<p style="color:{MUTED};font-size:0.85rem;margin:0.6rem 0 0 0;">'
         f'or separately: <code style="color:{RED_SOFT};">python -m recommendation.main</code></p></div>',
         unsafe_allow_html=True,
     )
+    if st.button("Retry now"):
+        st.session_state.auto_generate_attempted = False
+        st.session_state.auto_generate_error = None
+        st.rerun()
     show_fixed_logo()
     st.stop()
 

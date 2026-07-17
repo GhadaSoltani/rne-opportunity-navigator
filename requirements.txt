@@ -1,25 +1,28 @@
+# Python 3.13.13
+
 # Extraction
-camelot-py[cv]
-pymupdf
-opencv-python
-PyPDF2
+camelot-py[cv]==2.0.0
+pymupdf==1.28.0
+opencv-python==5.0.0.93
+PyPDF2==3.0.1
 
 # Segmentation
-pandas
-numpy
-pyyaml
-scikit-learn
-sentence-transformers
-requests
-tqdm
-joblib
-openpyxl
+pandas==3.0.3
+numpy==2.5.1
+pyyaml==6.0.3
+scikit-learn==1.9.0
+sentence-transformers==5.6.0
+torchvision==0.28.0
+requests==2.34.2
+tqdm==4.68.4
+joblib==1.5.3
+openpyxl==3.1.5
 
 # API
-fastapi
-uvicorn[standard]
-python-multipart
+fastapi==0.139.2
+uvicorn[standard]==0.51.0
+python-multipart==0.0.32
 
 # Dashboard
-streamlit
-plotly
+streamlit==1.59.2
+plotly==6.9.0
